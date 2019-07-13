@@ -37,7 +37,7 @@ def handle_timeout(self):
 
 #server.handle_timeout = types.MethodType(handle_timeout, server)
 
-#Funtion to switch pins between high/low - Turning EL wire On/Off. Triggered via OSC from Abelton Live.
+#Funtion to switch pins between high/low - Turning EL wire On/Off. Triggered via OSC from Abelton Live. The osc messages will be either 1 or 0, 1 if the midi note is pressed, zero when a note is released.
 
 def elwiretoggle(path, tags, args, source):
 		split = path.split("/1/toggle")
@@ -50,7 +50,7 @@ def elwiretoggle(path, tags, args, source):
 		if state == 0:
 		  GPIO.output(pin,GPIO.LOW)
 
-#Funtion to pulse modulate the GPIO p[ins causing EL wire to pulse/fade. Triggered via OSC from Abelton Live.
+#Function to pulse modulate the GPIO p[ins causing EL wire to pulse/fade for one cycle. Triggered via OSC from Abelton Live. With this I would like to be able to toggle the fade ON if a note is pressed and have it continue to pulse on a loop until the key is released. Currently i can only make it execute one cycle of the PWM funtion and then it stops, regardless of whether the button is still pressed or not. I would also like to be able to modify the RANGE variables, in Real time if possible, from a separate OSC handler that sends a float between 0.0-1.0. Then i will be able to change the pulse speed with a fader from abelton. 
 def elwirepulse(path, tags, args, source):
                 split = path.split("/2/pulse")
                 x =split.pop()
