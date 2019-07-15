@@ -71,20 +71,24 @@ def elwirepulse(address, args):
     state = int(args)
     if state == 1:
         print("Pulse ON", x)
-        # if the loop for this pin is not running
-        if not LOOPS[int(pin_id)].is_running():
-            # for the loop specified for this pin run the pulse forever
-            LOOPS[int(pin_id)].run_until_complete(pulse_pin(pin))
+        # check if the pin has a loop
+        if pin_id in LOOPS.keys():
+            # if the loop for this pin is not running
+            if not LOOPS[pin_id].is_running():
+                # for the loop specified for this pin run the pulse forever
+                LOOPS[pin_id].run_until_complete(pulse_pin(pin))
     if state == 0:
-        # for the loop for this pin, stop the loop
-        LOOPS[int(pin_id)].stop()
+        # check if the pin has a loop
+        if pin_id in LOOPS.keys():
+            # for the loop for this pin, stop the loop
+            LOOPS[pin_id].stop()
         pi.set_PWM_dutycycle(pin, 0)
         print("Pulse OFF", pin_id)
 
 
-LOOPS = []  # loops will hold all of the loop definitions for async tasks
+LOOPS = {}  # loops will hold all of the loop definitions for async tasks
 dispatcher = dispatcher.Dispatcher()
 for x in range(1, 25):
-    LOOPS[x] = asyncio.get_event_loop()
+    LOOPS[str(x)] = asyncio.get_event_loop()
     dispatcher.map("/toggle%s" % x, elwiretoggle)
     dispatcher.map("/pulse%s" % x, elwirepulse)
