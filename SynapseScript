@@ -6,12 +6,14 @@ from pythonosc import osc_server
 
 from Synapse import dispatcher
 
+DEFAULT_IP = "10.1.1.181"
+DEFAULT_PORT = 7002
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--ip",
-                    default="10.1.1.181", help="The ip to listen on")
+                    default=DEFAULT_IP, help="The ip to listen on")
 parser.add_argument("--port",
-                    type=int, default=7002, help="The port to listen on")
+                    type=int, default=DEFAULT_PORT, help="The port to listen on")
 
 
 if __name__ == "__main__":

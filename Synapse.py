@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import asyncio
 import pigpio
 import time
 
@@ -37,6 +38,19 @@ def elwiretoggle(address, args):
         print("Toggle OFF", pin_id)
 
 
+async def pulse_pin(pin):
+    """ async handler for pin pulsing """
+    while True:
+        for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
+            pi.set_PWM_dutycycle(pin, dc)
+            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
+            print(dc)
+        for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
+            pi.set_PWM_dutycycle(pin, dc)
+            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
+            print(dc)
+
+
 def elwirepulse(address, args):
     """
     pulse modulate the GPIO p[ins causing EL wire to pulse/fade for one cycle.
@@ -56,23 +70,21 @@ def elwirepulse(address, args):
     pin = pinouts[int(pin_id)]
     state = int(args)
     if state == 1:
-        # print ("Pulse ON",x)
-        # dc=0
-        # while True:
-        for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
-            pi.set_PWM_dutycycle(pin, dc)
-            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
-            print(dc)
-        for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
-            pi.set_PWM_dutycycle(pin, dc)
-            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
-            print(dc)
+        print("Pulse ON", x)
+        # if the loop for this pin is not running
+        if not LOOPS[int(pin_id)].is_running():
+            # for the loop specified for this pin run the pulse forever
+            LOOPS[int(pin_id)].run_until_complete(pulse_pin(pin))
     if state == 0:
+        # for the loop for this pin, stop the loop
+        LOOPS[int(pin_id)].stop()
         pi.set_PWM_dutycycle(pin, 0)
         print("Pulse OFF", pin_id)
 
 
+LOOPS = []  # loops will hold all of the loop definitions for async tasks
 dispatcher = dispatcher.Dispatcher()
 for x in range(1, 25):
+    LOOPS[x] = asyncio.get_event_loop()
     dispatcher.map("/toggle%s" % x, elwiretoggle)
     dispatcher.map("/pulse%s" % x, elwirepulse)
