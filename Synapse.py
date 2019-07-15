@@ -11,15 +11,14 @@ pi = pigpio.pi()
 
 async def pulse_pin(pin):
     """ async handler for pin pulsing """
-    while True:
-        for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
-            pi.set_PWM_dutycycle(pin, dc)
-            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
-            print(dc)
-        for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
-            pi.set_PWM_dutycycle(pin, dc)
-            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
-            print(dc)
+    for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
+        pi.set_PWM_dutycycle(pin, dc)
+        time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
+        print(dc)
+    for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
+        pi.set_PWM_dutycycle(pin, dc)
+        time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
+        print(dc)
 
 
 # Set up GPIO ports
