@@ -1,89 +1,22 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from OSC import OSCServer,OSCClient, OSCMessage, ThreadingOSCServer
-import sys
-from time import sleep
-import time
-import types
-import os
-import subprocess
-import threading
-from threading import Thread
-from os.path import isfile, join
-import socket
-import RPi.GPIO as GPIO
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+import argparse
 
-#Set up GPIO ports
-pinouts = [1, 2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
-for i in pinouts:
-        GPIO.setup(i, GPIO.OUT)
-		
-#Get IP address of Wifi adapter // NEED TO CHANGE THIS SECTION TO RESOLVE IP OF ETHERNET PORT INSTEAD OF WIFI.
-#gw = os.popen("ip -4 route show default").read().split()
-#s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#s.connect((gw[2], 0))
-#myip = s.getsockname()[0]
-#print 'Your OSC server IP address is',myip
+from pythonosc import osc_server
 
-#Set up threaded OSC server, set IP to the same as Ethernet
-server = ThreadingOSCServer(("10.1.1.181", 7002) )#This has to be the IP of the RaspberryPi on the network
-client = OSCClient()
+from Synapse import dispatcher
 
-def handle_timeout(self):
-	print ("I'm IDLE")
-#This here is just to do something while the script recieves no information....
 
-#server.handle_timeout = types.MethodType(handle_timeout, server)
+parser = argparse.ArgumentParser()
+parser.add_argument("--ip",
+                    default="10.1.1.181", help="The ip to listen on")
+parser.add_argument("--port",
+                    type=int, default=7002, help="The port to listen on")
 
-#Funtion to switch pins between high/low - Turning EL wire On/Off. Triggered via OSC from Abelton Live. The osc messages will be either 1 or 0, 1 if the midi note is pressed, zero when a note is released.
 
-def elwiretoggle(path, tags, args, source):
-		split = path.split("/1/toggle")
-		x =split.pop()
-		state=int(args[0])
-		pin = pinouts[int(x)]
-		print "Toggle",x
-		if state == 1:
-		  GPIO.output(pin,GPIO.HIGH)
-		if state == 0:
-		  GPIO.output(pin,GPIO.LOW)
-
-#Function to pulse modulate the GPIO p[ins causing EL wire to pulse/fade for one cycle. Triggered via OSC from Abelton Live. With this I would like to be able to toggle the fade ON if a note is pressed and have it continue to pulse on a loop until the key is released. Currently i can only make it execute one cycle of the PWM funtion and then it stops, regardless of whether the button is still pressed or not. I would also like to be able to modify the RANGE variables, in Real time if possible, from a separate OSC handler that sends a float between 0.0-1.0. Then i will be able to change the pulse speed with a fader from abelton. 
-def elwirepulse(path, tags, args, source):
-                split = path.split("/2/pulse")
-                x =split.pop()
-		pin = pinouts[int(x)]
-                state=int(args[0])
-		pwm = GPIO.PWM(pin, 200)
-                if state == 1:
-			print "Pulse",x
-			dc=0
-			pwm.start(dc)
-  			for dc in range(0, 101, 1):      # Loop from 0 to 100 stepping dc up by 1 each loop
-    				pwm.ChangeDutyCycle(dc)
-    				time.sleep(0.01)               # wait for .05 seconds at current LED brightness level
-    				#print(dc)
-  			for dc in range(95, 0, -1):      # Loop from 95 to 5 stepping dc down by 1 each loop
-    				pwm.ChangeDutyCycle(dc)
-    				time.sleep(0.01)               # wait for .05 seconds at current LED brightness level#
-    				#print(dc)
-                if state == 0:
-#				print "OFF Pulse",x
-				pwm.stop()
-
-#Set up the OSC EL wire OSC handlers for ON/OFF and Fade.
-for x in range(1,25):
-	        server.addMsgHandler("/1/"+"toggle"+`x`, elwiretoggle)
-		server.addMsgHandler("/2/"+"pulse"+`x`, elwirepulse)
-
-#The way that the MSG Handlers work is by taking the values from set accessory, then it puts them into a function
-#The function then takes the values and separates them according to their class (args, source, path, and tags)
-
-while True:
-	server.handle_request()
-  
-server.close()
-GPIO.cleanup()
-#This will kill the server when the program ends
+if __name__ == "__main__":
+    args = parser.parse_args()
+    server = osc_server.ThreadingOSCUDPServer(
+        (args.ip, args.port), dispatcher)
+    print("Serving on {}".format(server.server_address))
+    server.serve_forever()
