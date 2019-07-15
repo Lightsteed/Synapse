@@ -19,7 +19,7 @@ parser.add_argument("--port",
 if __name__ == "__main__":
     args = parser.parse_args()
     # server = osc_server.ThreadingOSCUDPServer(
-    server = osc_server.OSCUDPServer(
+    server = osc_server.ThreadingOSCUDPServer(
         (args.ip, args.port), dispatcher)
     print("Serving on {}".format(server.server_address))
     server.serve_forever()
