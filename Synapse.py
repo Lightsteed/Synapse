@@ -8,12 +8,29 @@ from pythonosc import dispatcher
 
 pi = pigpio.pi()
 
+
+async def pulse_pin(pin):
+    """ async handler for pin pulsing """
+    while True:
+        for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
+            pi.set_PWM_dutycycle(pin, dc)
+            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
+            print(dc)
+        for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
+            pi.set_PWM_dutycycle(pin, dc)
+            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
+            print(dc)
+
+
 # Set up GPIO ports
 PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
 LOOPS = {}  # loops will hold all of the loop definitions for async tasks
-for i in PINOUTS:
-    pi.set_mode(i, pigpio.OUTPUT)
-    LOOPS[i] = asyncio.get_event_loop()
+for pin_number in PINOUTS:
+    # set mode to output
+    pi.set_mode(pin_number, pigpio.OUTPUT)
+    # setup loop and loop task
+    LOOPS[pin_number] = asyncio.get_event_loop()
+    LOOPS[pin_number].create_task(pulse_pin(pin_number))
 
 
 def handle_timeout():
@@ -38,19 +55,6 @@ def elwiretoggle(address, args):
     if state == 0:
         pi.write(pin, 0)
         print("Toggle OFF", pin_id)
-
-
-async def pulse_pin(pin):
-    """ async handler for pin pulsing """
-    while True:
-        for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
-            pi.set_PWM_dutycycle(pin, dc)
-            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
-            print(dc)
-        for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
-            pi.set_PWM_dutycycle(pin, dc)
-            time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
-            print(dc)
 
 
 def elwirepulse(address, args):
@@ -78,7 +82,7 @@ def elwirepulse(address, args):
             # if the loop for this pin is not running
             if not LOOPS[pin].is_running():
                 # for the loop specified for this pin run the pulse forever
-                LOOPS[pin].run_until_complete(pulse_pin(pin))
+                LOOPS[pin].run_forever()
     if state == 0:
         # check if the pin has a loop
         if pin in LOOPS.keys():
