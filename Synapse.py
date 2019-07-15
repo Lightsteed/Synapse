@@ -9,6 +9,13 @@ from pythonosc import dispatcher
 pi = pigpio.pi()
 
 
+# Set up GPIO ports
+PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
+for pin_number in PINOUTS:
+    # set mode to output
+    pi.set_mode(pin_number, pigpio.OUTPUT)
+
+
 async def pulse_pin(pin):
     """ async handler for pin pulsing """
     for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
@@ -21,12 +28,8 @@ async def pulse_pin(pin):
         print(dc)
 
 
-# Set up GPIO ports
-PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
 LOOPS = {}  # loops will hold all of the loop definitions for async tasks
 for pin_number in PINOUTS:
-    # set mode to output
-    pi.set_mode(pin_number, pigpio.OUTPUT)
     # setup loop and loop task
     LOOPS[pin_number] = asyncio.get_event_loop()
     LOOPS[pin_number].create_task(pulse_pin(pin_number))
@@ -75,7 +78,7 @@ def elwirepulse(address, args):
     pin = PINOUTS[int(pin_id)]
     state = int(args)
     if state == 1:
-        print("Pulse ON", x)
+        print("Pulse ON", pin_id)
         # check if the pin has a loop
         if pin in LOOPS.keys():
             # if the loop for this pin is not running
