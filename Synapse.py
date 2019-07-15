@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import asyncio
+# import asyncio
+from threading import Thread
 import pigpio
 import time
 
@@ -8,31 +9,38 @@ from pythonosc import dispatcher
 
 pi = pigpio.pi()
 
-
 # Set up GPIO ports
 PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
+PULSE_ON = {}
 for pin_number in PINOUTS:
     # set mode to output
     pi.set_mode(pin_number, pigpio.OUTPUT)
+    PULSE_ON[pin_number] = False
 
 
-async def pulse_pin(pin):
+def pulse_pin(pin):
     """ async handler for pin pulsing """
-    for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
-        pi.set_PWM_dutycycle(pin, dc)
-        time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
-        print(dc)
-    for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
-        pi.set_PWM_dutycycle(pin, dc)
-        time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
-        print(dc)
+    while True:
+        if PULSE_ON.get(pin):
+            for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
+                pi.set_PWM_dutycycle(pin, dc)
+                time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
+                print(dc)
+        if PULSE_ON.get(pin):
+            for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
+                pi.set_PWM_dutycycle(pin, dc)
+                time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
+                print(dc)
+        if not PULSE_ON.get(pin):
+            pi.set_PWM_dutycycle(pin, 0)
+        # might need a sleep in here
 
 
-LOOPS = {}  # loops will hold all of the loop definitions for async tasks
+THREADS = {}  # so many threads
 for pin_number in PINOUTS:
     # setup loop and loop task
-    LOOPS[pin_number] = asyncio.get_event_loop()
-    LOOPS[pin_number].create_task(pulse_pin(pin_number))
+    THREADS[pin_number] = Thread(target=pulse_pin, args=(pin_number,))
+    THREADS[pin_number].join()
 
 
 def handle_timeout():
@@ -80,16 +88,9 @@ def elwirepulse(address, args):
     if state == 1:
         print("Pulse ON", pin_id)
         # check if the pin has a loop
-        if pin in LOOPS.keys():
-            # if the loop for this pin is not running
-            if not LOOPS[pin].is_running():
-                # for the loop specified for this pin run the pulse forever
-                LOOPS[pin].run_forever()
+        PULSE_ON[pin] = True
     if state == 0:
-        # check if the pin has a loop
-        if pin in LOOPS.keys():
-            # for the loop for this pin, stop the loop
-            LOOPS[pin].stop()
+        PULSE_ON[pin] = False
         pi.set_PWM_dutycycle(pin, 0)
         print("Pulse OFF", pin_id)
 
