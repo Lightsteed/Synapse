@@ -9,9 +9,11 @@ from pythonosc import dispatcher
 pi = pigpio.pi()
 
 # Set up GPIO ports
-pinouts = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
-for i in pinouts:
+PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
+LOOPS = {}  # loops will hold all of the loop definitions for async tasks
+for i in PINOUTS:
     pi.set_mode(i, pigpio.OUTPUT)
+    LOOPS[i] = asyncio.get_event_loop()
 
 
 def handle_timeout():
@@ -29,7 +31,7 @@ def elwiretoggle(address, args):
     split = address.split("/toggle")
     pin_id = split.pop()
     state = int(args)
-    pin = pinouts[int(pin_id)]
+    pin = PINOUTS[int(pin_id)]
     if state == 1:
         pi.write(pin, 1)
         print("Toggle ON", pin_id)
@@ -67,28 +69,26 @@ def elwirepulse(address, args):
     """
     split = address.split("/pulse")
     pin_id = split.pop()
-    pin = pinouts[int(pin_id)]
+    pin = PINOUTS[int(pin_id)]
     state = int(args)
     if state == 1:
         print("Pulse ON", x)
         # check if the pin has a loop
-        if pin_id in LOOPS.keys():
+        if pin in LOOPS.keys():
             # if the loop for this pin is not running
-            if not LOOPS[pin_id].is_running():
+            if not LOOPS[pin].is_running():
                 # for the loop specified for this pin run the pulse forever
-                LOOPS[pin_id].run_until_complete(pulse_pin(pin))
+                LOOPS[pin].run_until_complete(pulse_pin(pin))
     if state == 0:
         # check if the pin has a loop
-        if pin_id in LOOPS.keys():
+        if pin in LOOPS.keys():
             # for the loop for this pin, stop the loop
-            LOOPS[pin_id].stop()
+            LOOPS[pin].stop()
         pi.set_PWM_dutycycle(pin, 0)
         print("Pulse OFF", pin_id)
 
 
-LOOPS = {}  # loops will hold all of the loop definitions for async tasks
 dispatcher = dispatcher.Dispatcher()
 for x in range(1, 25):
-    LOOPS[str(x)] = asyncio.get_event_loop()
     dispatcher.map("/toggle%s" % x, elwiretoggle)
     dispatcher.map("/pulse%s" % x, elwirepulse)
