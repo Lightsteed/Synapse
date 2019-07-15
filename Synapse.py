@@ -40,6 +40,7 @@ THREADS = {}  # so many threads
 for pin_number in PINOUTS:
     # setup loop and loop task
     THREADS[pin_number] = Thread(target=pulse_pin, args=(pin_number,))
+    THREADS[pin_number].start()
     THREADS[pin_number].join()
 
 
