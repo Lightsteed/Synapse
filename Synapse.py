@@ -1,37 +1,46 @@
 #!/usr/bin/env python3
-
-# import asyncio
-from threading import Thread
-import pigpio
 import time
+from threading import Thread
+from typing import Union, Dict
 
+import pigpio
 from pythonosc import dispatcher
 
 pi = pigpio.pi()
 
 # Set up GPIO ports
 PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
-PULSE_ON = {}
+PIN_STATUS: Dict[int, Union[int, str]] = {}
 for pin_number in PINOUTS:
     # set mode to output
     pi.set_mode(pin_number, pigpio.OUTPUT)
-    PULSE_ON[pin_number] = False
+    PIN_STATUS[pin_number] = 0
 
 
 def pulse_pin(pin):
     """ async handler for pin pulsing """
     while True:
-        if PULSE_ON.get(pin):
+        if PIN_STATUS.get(pin) == 'pulse':
+            # if this pin should be in pulse mode
             for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
+                if PIN_STATUS.get(pin) != 'pulse':
+                    # if it isn't pulse anymore, break this loop
+                    break
                 pi.set_PWM_dutycycle(pin, dc)
                 time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
                 print(dc)
-        if PULSE_ON.get(pin):
             for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
+                if PIN_STATUS.get(pin) != 'pulse':
+                    # if it isn't pulse anymore, break this loop
+                    break
                 pi.set_PWM_dutycycle(pin, dc)
                 time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
                 print(dc)
-        if not PULSE_ON.get(pin):
+        elif str(PIN_STATUS.get(pin)).isnumeric() and PIN_STATUS.get(pin) > 0:
+            # if this pin is a number value, then assign it
+            pi.set_PWM_dutycycle(pin, PIN_STATUS.get(pin))
+        else:
+            # if anything else, turn the pin off
             pi.set_PWM_dutycycle(pin, 0)
         # might need a sleep in here
 
@@ -61,10 +70,12 @@ def elwiretoggle(address, args):
     state = int(args)
     pin = PINOUTS[int(pin_id)]
     if state == 1:
-        pi.write(pin, 1)
+        # pi.write(pin, 1)
+        PIN_STATUS[pin] = 1
         print("Toggle ON", pin_id)
     if state == 0:
-        pi.write(pin, 0)
+        # pi.write(pin, 0)
+        PIN_STATUS[pin] = 0
         print("Toggle OFF", pin_id)
 
 
@@ -89,10 +100,10 @@ def elwirepulse(address, args):
     if state == 1:
         print("Pulse ON", pin_id)
         # check if the pin has a loop
-        PULSE_ON[pin] = True
+        PIN_STATUS[pin] = 'pulse'
     if state == 0:
-        PULSE_ON[pin] = False
-        pi.set_PWM_dutycycle(pin, 0)
+        PIN_STATUS[pin] = 0
+        # pi.set_PWM_dutycycle(pin, 0)
         print("Pulse OFF", pin_id)
 
 
