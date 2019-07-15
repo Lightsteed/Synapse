@@ -17,28 +17,26 @@ for pin_number in PINOUTS:
     PIN_STATUS[pin_number] = 0
 
 
-def pulse_pin(pin):
+def manage_pin_state(pin):
     """ async handler for pin pulsing """
     while True:
         if PIN_STATUS.get(pin) == 'pulse':
             # if this pin should be in pulse mode
             for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
-                if PIN_STATUS.get(pin) != 'pulse':
+                if PIN_STATUS.get(pin) == 'pulse':
                     # if it isn't pulse anymore, break this loop
-                    break
-                pi.set_PWM_dutycycle(pin, dc)
-                time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
-                print(dc)
+                    pi.set_PWM_dutycycle(pin, dc)
+                    time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
+                    print(dc)
             for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
-                if PIN_STATUS.get(pin) != 'pulse':
+                if PIN_STATUS.get(pin) == 'pulse':
                     # if it isn't pulse anymore, break this loop
-                    break
-                pi.set_PWM_dutycycle(pin, dc)
-                time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
-                print(dc)
+                    pi.set_PWM_dutycycle(pin, dc)
+                    time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
+                    print(dc)
         elif str(PIN_STATUS.get(pin)).isnumeric() and PIN_STATUS.get(pin) > 0:
             # if this pin is a number value, then assign it
-            pi.set_PWM_dutycycle(pin, PIN_STATUS.get(pin))
+            pi.write(pin, PIN_STATUS.get(pin))
         else:
             # if anything else, turn the pin off
             pi.set_PWM_dutycycle(pin, 0)
@@ -48,7 +46,7 @@ def pulse_pin(pin):
 THREADS = {}  # so many threads
 for pin_number in PINOUTS:
     # setup loop and loop task
-    THREADS[pin_number] = Thread(target=pulse_pin, args=(pin_number,))
+    THREADS[pin_number] = Thread(target=manage_pin_state, args=(pin_number,))
     THREADS[pin_number].start()
     # THREADS[pin_number].join()
 
