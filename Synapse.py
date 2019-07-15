@@ -39,7 +39,7 @@ def manage_pin_state(pin):
             pi.write(pin, PIN_STATUS.get(pin))
         else:
             # if anything else, turn the pin off
-            pi.set_PWM_dutycycle(pin, 0)
+            pi.write(pin, 0)
         # might need a sleep in here
 
 
