@@ -92,9 +92,9 @@ def elwiretoggleB(address, args):
 		print("Toggle B OFF", piBx)
 	
 def elwirepulseB(address, args):
-	split = address.split("/pulseeB")
+	split = address.split("/pulseB")
 	piBx = split.pop()
-	piBclient.send_message("/pulsee%s" % piBx, args)
+	piBclient.send_message("/pulse%s" % piBx, args)
 	state = int(args)
 	if state == 1:
 		print("Pulse B ON", piBx)
