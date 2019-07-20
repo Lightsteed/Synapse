@@ -84,13 +84,23 @@ def elwiretoggle(address, args):
 def elwiretoggleB(address, args):
 	split = address.split("/toggleB")
 	piBx = split.pop()
+	state = int(args)
 	piBclient.send_message("/toggle%s" % piBx, args)
-
+	if state == 1:
+		print("Toggle B ON", piBx)
+	if state == 0:
+		print("Toggle B OFF", piBx)
+	
 def elwirepulseB(address, args):
 	split = address.split("/pulseeB")
 	piBx = split.pop()
 	piBclient.send_message("/pulsee%s" % piBx, args)
-
+	state = int(args)
+	if state == 1:
+		print("Pulse B ON", piBx)
+	if state == 0:
+		print("Pulse B OFF", piBx)
+		
 def elwirepulse(address, args):
     """
     pulse modulate the GPIO p[ins causing EL wire to pulse/fade for one cycle.
