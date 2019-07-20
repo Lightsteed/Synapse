@@ -5,6 +5,7 @@ from typing import Union, Dict
 
 import pigpio
 from pythonosc import dispatcher
+from pythonosc.udp_client import SimpleUDPClient
 
 pi = pigpio.pi()
 piBip = "10.1.1.199"
