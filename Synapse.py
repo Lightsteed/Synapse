@@ -7,6 +7,10 @@ import pigpio
 from pythonosc import dispatcher
 
 pi = pigpio.pi()
+piBip = "10.1.1.199"
+portpiB = 7002
+
+piBclient = SimpleUDPClient(piBip, portpiB)
 
 # Set up GPIO ports
 PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
@@ -75,7 +79,16 @@ def elwiretoggle(address, args):
         # pi.write(pin, 0)
         PIN_STATUS[pin] = 0
         print("Toggle OFF", pin_id)
+        
+def elwiretoggleB(address, args):
+	split = address.split("/toggleB")
+	piBx = split.pop()
+	piBclient.send_message("/toggle%s" % piBx, args)
 
+def elwirepulseB(address, args):
+	split = address.split("/pulseeB")
+	piBx = split.pop()
+	piBclient.send_message("/pulsee%s" % piBx, args)
 
 def elwirepulse(address, args):
     """
@@ -109,3 +122,5 @@ dispatcher = dispatcher.Dispatcher()
 for x in range(1, 25):
     dispatcher.map("/toggle%s" % x, elwiretoggle)
     dispatcher.map("/pulse%s" % x, elwirepulse)
+    dispatcher.map("/toggleB%s" % x, elwiretoggleB)
+    dispatcher.map("/pulseB%s" % x, elwirepulseB)
