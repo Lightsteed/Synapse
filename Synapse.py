@@ -130,7 +130,7 @@ def elwirepulse(address, args):
 
 
 dispatcher = dispatcher.Dispatcher()
-for x in range(1, 25):
+for x in range(1, 26):
     dispatcher.map("/toggle%s" % x, elwiretoggle)
     dispatcher.map("/pulse%s" % x, elwirepulse)
     dispatcher.map("/toggleB%s" % x, elwiretoggleB)
