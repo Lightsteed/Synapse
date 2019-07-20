@@ -14,7 +14,7 @@ portpiB = 7002
 piBclient = SimpleUDPClient(piBip, portpiB)
 
 # Set up GPIO ports
-PINOUTS = [1, 2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
+PINOUTS = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5, 6, 13, 19, 26, 18, 23, 24, 25, 8, 7, 12, 16, 20, 21]
 PIN_STATUS: Dict[int, Union[int, str]] = {}
 for pin_number in PINOUTS:
     # set mode to output
@@ -130,7 +130,7 @@ def elwirepulse(address, args):
 
 
 dispatcher = dispatcher.Dispatcher()
-for x in range(1, 26):
+for x in range(0, 25):
     dispatcher.map("/toggle%s" % x, elwiretoggle)
     dispatcher.map("/pulse%s" % x, elwirepulse)
     dispatcher.map("/toggleB%s" % x, elwiretoggleB)
