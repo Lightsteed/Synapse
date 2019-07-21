@@ -3,11 +3,9 @@
 import argparse
 from pythonosc import osc_server
 from Synapse import dispatcher
-import netifaces as ni
 
-ni.ifaddresses('eth0')
 
-DEFAULT_IP = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr']
+DEFAULT_IP = "0.0.0.0"
 DEFAULT_PORT = 7002
 
 parser = argparse.ArgumentParser()
