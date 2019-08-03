@@ -27,17 +27,17 @@ def manage_pin_state(pin):
     while True:
         if PIN_STATUS.get(pin) == 'pulse':
             # if this pin should be in pulse mode
-            for dc in range(0, 101, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
+            for dc in range(0, 255, 1):  # Loop from 0 to 100 stepping dc up by 1 each loop
                 if PIN_STATUS.get(pin) == 'pulse':
                     # if it isn't pulse anymore, break this loop
                     pi.set_PWM_dutycycle(pin, dc)
-                    time.sleep(0.01)  # wait for .05 seconds at current LED brightness level
+                    time.sleep(0.02)  # wait for .05 seconds at current LED brightness level
                     print(dc)
-            for dc in range(95, 0, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
+            for dc in range(255, 5, -1):  # Loop from 95 to 5 stepping dc down by 1 each loop
                 if PIN_STATUS.get(pin) == 'pulse':
                     # if it isn't pulse anymore, break this loop
                     pi.set_PWM_dutycycle(pin, dc)
-                    time.sleep(0.01)  # wait for .05 seconds at current LED brightness level#
+                    time.sleep(0.02)  # wait for .05 seconds at current LED brightness level#
                     print(dc)
         elif str(PIN_STATUS.get(pin)).isnumeric() and PIN_STATUS.get(pin) > 0:
             # if this pin is a number value, then assign it
